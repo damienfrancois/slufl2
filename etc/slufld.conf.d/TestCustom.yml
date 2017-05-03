@@ -1,0 +1,9 @@
+- hosts:
+    - localhost
+  vars:
+    - desc: "Test helloworld"
+    - order: 5
+    - enable: True
+    - cn: "{{ cn[0] }}"
+  tasks:
+    - debug: var=cn

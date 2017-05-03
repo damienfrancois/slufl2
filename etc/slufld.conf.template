@@ -1,0 +1,50 @@
+# Configuration file for slufld
+
+[DAEMON]
+
+# statefile - path where slufld writes its state file. The state file maintains
+# information about which LDAP entries have been correctly processed. If the state
+# file does not exist, all current entries are assumed to be processed already. 
+statefile = /var/spool/slufld
+
+# logfile - path where slufld writes all logging information.  
+logfile = /var/log/slufld.log
+
+# initsleeptime - seconds between two consecutive polling of the LDAP
+# server for new entries. Upon error, the sleeptime is doubled until it reaches
+# 'maxsleeptime' at which point it remains at that value. Once an entry  is
+# successfully set up, the sleeptime is reset to 'initsleeptime'.
+initsleeptime = 300
+
+# maxsleeptime - maximum time (seconds)  between two consecutive polling of
+# thee LDAP server for new entries. 
+maxsleeptime = 7200
+
+
+[LDAP]
+
+# uri - URI of the ldap server 
+uri = ldap://localhost
+
+# subtree - distinguished name of the DIT subtree of interrest
+subtree = ou=users,dc=ceci-hpc,dc=be
+
+# binddn - user to bind with to the LDAP server with read access to the
+# 'subtree' 
+binddn = cn=root,dc=ceci-hpc,dc=be
+
+# credentials  - password associated with 'binddn'
+credentials = secretpassword
+
+# filter - LDAP filter to capture the entries that must be processed by Slufl
+filter = objectClass=posixAccount
+
+# logfield - name of the field in each LDAP entries to be used for reporting
+# progress in the log.
+logfield = uid
+
+
+[ANSIBLE]
+
+# inventory - path to the inventory to be used by Ansible
+inventory = /etc/slufld.conf.d/inventory
