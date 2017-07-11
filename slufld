@@ -258,10 +258,11 @@ if __name__ == "__main__":
                     rc, stdout = run_playbook(playbook_path, playbook_options)
                     logging.debug(stdout)
 
-                    if not OPT.RUNONCE:
-                        logging.debug("Updating state file (%s)" % entry.modtime)
-                        open(CFG.get("DAEMON", "statefile"), 'w').write(entry.modtime)
-                    sleeptime = CFG.getint("DAEMON", "initsleeptime")
+                if not OPT.RUNONCE:
+                    logging.debug("Updating state file (%s)" % entry.modtime)
+                    open(CFG.get("DAEMON", "statefile"), 'w').write(entry.modtime)
+
+            sleeptime = CFG.getint("DAEMON", "initsleeptime")
 
         except Exception as err:
             if OPT.RUNONCE:
