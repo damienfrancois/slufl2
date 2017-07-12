@@ -119,7 +119,7 @@ def build_filter():
 	    from_date = datetime.strptime(OPT.date, DATE_DATE_FMT).strftime(LDAP_DATE_FMT)
 	    logging.debug("Filter set from --date")
 	elif os.path.isfile(CFG.get("DAEMON", 'statefile')):
-	    statefile = open(CFG.get("DAEMON", 'statefile'), 'r').readline().strip()
+	    from_date = open(CFG.get("DAEMON", 'statefile'), 'r').readline().strip()
 	    logging.debug("Filter set from statefile %s" % CFG.get("DAEMON", 'statefile'))
 	else:
 	    from_date = datetime.today().strftime(LDAP_DATE_FMT)
