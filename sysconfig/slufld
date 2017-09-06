@@ -1,0 +1,12 @@
+# Option file for slufld init script
+
+# Daemon options
+#  -v, --verbose         Set more verbose output
+#  -d, --debug           Print debugging information
+#  -n, --dry-run         Show what would be done but do not do it.
+#  -r DATE, --from-date=DATE
+#                        Reload LDAP entries from date DATE (in date (1)
+#                        format, such as, for example: "`date -d '2 days
+#                        ago'`")
+#  -u USER, --user=USER  Reload LDAP entries for one specific user
+SLUFLD_ARGS=-d

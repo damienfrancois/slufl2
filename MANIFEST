@@ -1,0 +1,9 @@
+README
+setup.py
+slufld
+etc/slufld.service
+etc/slufld.conf.template
+etc/slufld.conf.d/inventory
+etc/slufld.conf.d/TestCustom.yml
+init.d/slufld
+sysconfig/slufld

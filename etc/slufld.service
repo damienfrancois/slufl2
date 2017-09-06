@@ -1,0 +1,8 @@
+[Unit]
+Description=Daemon to detect changes in LDAP
+After=syslog.target
+[Service]
+ExecStart=/bin/slufld -f -v
+Type=simple
+[Install]
+WantedBy=multi-user.target
