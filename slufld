@@ -18,10 +18,6 @@ from collections import namedtuple
 
 import ldap
 
-from ansible.inventory import Inventory
-from ansible.vars import VariableManager
-from ansible.parsing.dataloader import DataLoader
-from ansible.executor.playbook_executor import PlaybookExecutor
 
 __version__ = "2.0.0-beta"
 
@@ -229,6 +225,18 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     CFG = parse_config(CFG_FILE)
+
+    # The Ansible API does not seem to enable the configuration
+    # of the path to the configuration file so need to resort
+    # to setting the ANSIBLE_CONFIG environment variable.
+    if not os.environ.get("ANSIBLE_CONFIG"):
+        os.environ["ANSIBLE_CONFIG"] = CFG.get("ANSIBLE", "configfile")
+
+    # The following imports requirement the env to be set
+    from ansible.inventory import Inventory
+    from ansible.vars import VariableManager
+    from ansible.parsing.dataloader import DataLoader
+    from ansible.executor.playbook_executor import PlaybookExecutor
     
     sleeptime = CFG.getint("DAEMON", "initsleeptime")
 

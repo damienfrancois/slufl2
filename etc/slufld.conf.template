@@ -48,3 +48,6 @@ logfield = uid
 
 # inventory - path to the inventory to be used by Ansible
 inventory = /etc/slufld.conf.d/inventory
+
+# configfile - path to the Ansible configuration file
+configfile = /etc/slufld.conf.d/ansible.cfg.tata
