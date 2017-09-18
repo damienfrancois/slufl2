@@ -4,6 +4,12 @@
     - desc: "Test helloworld"
     - order: 5
     - enable: True
-    - cn: "{{ cn[0] }}"
+    #- cn: "{{ cn[0] }}"
+  vars_files:
+    - /etc/slufld.conf.d/vault/secret.yml
   tasks:
-    - debug: var=cn
+    #- debug: var=cn
+    - command: printenv
+      register: out
+    - debug: var=out.stdout
+    - debug: var=secret
