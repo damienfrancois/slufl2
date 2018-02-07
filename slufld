@@ -25,7 +25,7 @@ AnsibleOptions = namedtuple('Options', ['listtags', 'listtasks', 'listhosts',
         'syntax', 'connection','module_path', 'forks', 'remote_user',
         'private_key_file', 'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
         'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity',
-        'check'])
+        'check', 'diff'])
 
 DATE_DATE_FMT = "%Y-%m-%d"
 LDAP_DATE_FMT = "%Y%m%d%H%M%S+0100"
@@ -172,20 +172,21 @@ def build_playbook_list(playbook_dir):
     return sorted(playbook_paths)
 
 def build_playbook_options():
-    variable_manager = VariableManager()
     loader = DataLoader()
     if C.DEFAULT_VAULT_PASSWORD_FILE:
-        vault_password = CLI.read_vault_password_file(
-                C.DEFAULT_VAULT_PASSWORD_FILE, loader=loader)
-        loader.set_vault_password(vault_password)
-    inventory = Inventory(loader=loader, variable_manager=variable_manager,
-        host_list=CFG.get("ANSIBLE", "inventory"))
+        vault_secrets = CLI.setup_vault_secrets(loader,
+                vault_ids=C.DEFAULT_VAULT_IDENTITY_LIST,
+                vault_password_files=[C.DEFAULT_VAULT_PASSWORD_FILE],
+                auto_prompt=False)
+        loader.set_vault_secrets(vault_secrets)
+    inventory = Inventory(loader=loader, sources=[CFG.get("ANSIBLE", "inventory")])
     passwords = {}
     options = AnsibleOptions(listtags=False, listtasks=False, listhosts=False,
         syntax=False, connection='ssh', module_path=None, forks=10,
         remote_user='root', private_key_file=None, ssh_common_args=None,
         ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True,
-        become_method=None, become_user='root', verbosity=3, check=OPT.DRYRUN)
+        become_method=None, become_user='root', verbosity=3, check=OPT.DRYRUN, diff=True)
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
     return {"variable_manager": variable_manager, "loader": loader,
             "inventory": inventory, "passwords": passwords, "options": options}
 
@@ -193,7 +194,7 @@ def run_playbook(playbook_path, playbook_options):
     pbex = PlaybookExecutor(playbooks=[playbook_path], **playbook_options)
     sys_stdout = sys.stdout
     sys.stdout = StringIO()
-    rc = pbex.run() 
+    rc = pbex.run()
     stdout = sys.stdout.getvalue()
     sys.stdout = sys_stdout
     return rc, stdout
@@ -237,8 +238,8 @@ if __name__ == "__main__":
         os.environ["ANSIBLE_CONFIG"] = CFG.get("ANSIBLE", "configfile")
 
     # The following imports requirement the env to be set
-    from ansible.inventory import Inventory
-    from ansible.vars import VariableManager
+    from ansible.inventory.manager import InventoryManager as Inventory
+    from ansible.vars.manager import VariableManager
     from ansible.parsing.dataloader import DataLoader
     from ansible.executor.playbook_executor import PlaybookExecutor
     from ansible import constants as C
