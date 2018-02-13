@@ -310,9 +310,10 @@ if __name__ == "__main__":
                     logging.debug(stdout)
 
                 if not OPT.RUNONCE:
-                    logging.debug("Updating state file (%s)" % entry.modtime)
+                    logging.debug("Updating state file (%s)" % 
+                                  entry["modifyTimestamp"][0])
                     open(CFG.get("DAEMON", "statefile"), 'w').write(
-                            entry.modtime)
+                            entry["modifyTimestamp"][0])
 
             sleeptime = CFG.getint("DAEMON", "initsleeptime")
 
