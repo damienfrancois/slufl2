@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='slufl2',
-      version='2.0.0-beta',
+      version='2.1.0-beta',
       description='Run Ansible playbooks when LDAP entries change.',
       license='BSD',
       author='Damien François',
