@@ -4,6 +4,8 @@ slufld
 etc/slufld.service
 etc/slufld.conf.template
 etc/slufld.conf.d/inventory
+etc/slufld.conf.d/ansible.cfg
 etc/slufld.conf.d/TestCustom.yml
+etc/slufld.conf.d/vault/secret.yml
 init.d/slufld
 sysconfig/slufld

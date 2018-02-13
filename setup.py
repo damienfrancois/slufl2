@@ -14,7 +14,8 @@ setup(name='slufl2',
       data_files=[
                   ('/etc', ['etc/slufld.conf.template']),
                   ('/etc/systemd/system', ['etc/slufld.service']),
-                  ('/etc/slufld.conf.d', ['etc/slufld.conf.d/inventory', 'etc/slufld.conf.d/TestCustom.yml'])
+                  ('/etc/slufld.conf.d', ['etc/slufld.conf.d/inventory', 'etc/slufld.conf.d/ansible.cfg', 'etc/slufld.conf.d/TestCustom.yml']),
+                  ('/etc/slufld.conf.d/vault', ['etc/slufld.conf.d/vault/secret.yml'])
                  ],
       long_description="""slufl is a damon that monitors an LDAP server and
                   triggers Ansible playbook upon changes."""
