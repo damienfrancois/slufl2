@@ -183,17 +183,17 @@ def build_playbook_list(playbook_dir):
     playbook_paths = []
     for playbook_path in glob.glob(playbook_dir + "/*.yml"):
         playbook = yaml.load(open(playbook_path).read())
-        order = 0
+        rank = 0
         desc = playbook_path
         for var in playbook[0]["vars"]:
             k, v = next(var.iteritems())
-            if k == "order":
-                order = v
+            if k == "rank":
+                rank = v
             if k == "desc":
                 desc = v
             if k == "enable":
                 if v:
-                    playbook_paths.append((order, playbook_path, desc))
+                    playbook_paths.append((rank, playbook_path, desc))
     return sorted(playbook_paths)
 
 
