@@ -8,12 +8,13 @@ It can be used for instance to setup a proper environment for new users that are
 Quick start
 ===========
 
-First install the prerequisites:
+Prerequisites:
 
+  - Python 2.7
   - LDAP Python binding (python-ldap) with your operating system's package manager or Pip
-  - Ansible (version 2 or above)
+  - Ansible (version 2 or above; for the 2.4 version, see the dedicated branch)
 
-Then copy the `slufld.conf.template` file to `/etc/slufld.conf` and update its contents, especially the part that refers to the LDAP server configuration. Copy the `etc/slufld.conf.d` directory to `/etc`.
+Copy the `slufld.conf.template` file to `/etc/slufld.conf` and update its contents, especially the part that refers to the LDAP server configuration. Copy the `etc/slufld.conf.d` directory to `/etc`.
 
 You can then test slufl by running it interactively on the entries corresponding to the LDAP filter "uid=*".
 
