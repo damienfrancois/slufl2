@@ -10,7 +10,7 @@ Quick start
 
 Prerequisites:
 
-  - Python 2.7
+  - Python 2.7  (or Python 2.6 and with `argparse` installed with `pip` or `easy_install`)
   - LDAP Python binding (python-ldap) with your operating system's package manager or Pip
   - Ansible (version 2 or above; for the 2.4 version, see the dedicated branch)
 
