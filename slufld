@@ -21,11 +21,13 @@ import ldap
 
 __version__ = "2.0.0-beta"
 
-AnsibleOptions = namedtuple('Options', ['listtags', 'listtasks', 'listhosts',
-        'syntax', 'connection','module_path', 'forks', 'remote_user',
-        'private_key_file', 'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
-        'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity',
-        'check'])
+AnsibleOptions = namedtuple(
+        'Options', ['listtags', 'listtasks', 'listhosts',
+                    'syntax', 'connection', 'module_path', 'forks',
+                    'remote_user', 'private_key_file', 'ssh_common_args',
+                    'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args',
+                    'become', 'become_method', 'become_user', 'verbosity',
+                    'check', 'diff'])
 
 DATE_DATE_FMT = "%Y-%m-%d"
 LDAP_DATE_FMT = "%Y%m%d%H%M%S+0100"
@@ -33,24 +35,34 @@ LOG_FMT = "%(asctime)s %(filename)s [%(process)s] : %(message)s"
 CFG_PID_FILE = '/var/run/slufld.pid'
 CFG_LOG_FILE = '/var/log/slufld.log'
 
+
 def parse_options():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--foreground", action="store_true", dest="FORGROUND", 
-            help="Stay in the foreground, i.e. do not daemonize.")
-    parser.add_argument("-1", "--run-once", action="store_true", dest="RUNONCE", 
-            help="Stop after first iteration")
-    parser.add_argument("-V", "--version", action="store_true", dest="VERSION",
-            help="Show version")
-    parser.add_argument("-v", "--verbose", action="store_true", dest="VERBOSE", 
-            help="Set more verbose output")
-    parser.add_argument("-d", "--debug", action="store_true", dest="DEBUG", 
-            help="Show debugging information")
-    parser.add_argument("-n", "--dry-run", action="store_true", dest="DRYRUN", 
-            help="Show what would be done but do not do it.")
-    parser.add_argument("-r", "--from-date", action="store", dest="date", type=str, default="", 
+    parser.add_argument(
+        "-f", "--foreground", action="store_true", dest="FORGROUND",
+        help="Stay in the foreground, i.e. do not daemonize.")
+    parser.add_argument(
+        "-1", "--run-once", action="store_true", dest="RUNONCE",
+        help="Stop after first iteration")
+    parser.add_argument(
+        "-V", "--version", action="store_true", dest="VERSION",
+        help="Show version")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", dest="VERBOSE",
+        help="Set more verbose output")
+    parser.add_argument(
+        "-d", "--debug", action="store_true", dest="DEBUG",
+        help="Show debugging information")
+    parser.add_argument(
+        "-n", "--dry-run", action="store_true", dest="DRYRUN",
+        help="Show what would be done but do not do it.")
+    parser.add_argument(
+            "-r", "--from-date", action="store", dest="date",
+            type=str, default="",
             help="Reload LDAP entries from given date (YYYY-MM-DD)")
     parser.add_argument(dest="filter", type=str, nargs='?', default="")
     return parser.parse_args()
+
 
 def parse_config(CFG_FILE):
     try:
@@ -58,49 +70,53 @@ def parse_config(CFG_FILE):
         CFG = ConfigParser.RawConfigParser()
         CFG.read(CFG_FILE)
     except KeyError as err:
-        logging.critical("FATAL: Config file: One or several option(s) missing.")
+        logging.critical("FATAL: Config file: Mandatory option(s) missing.")
         sys.exit(-1)
     except ConfigParser.NoSectionError as err:
         logging.critical("FATAL: Config file: Section missing " + err.message)
         sys.exit(-1)
     return CFG
 
+
 def daemonize():
-    try: 
+    try:
         pid = os.fork()
-    except OSError, e: 
-        raise Exception, "%s" % (e.strerror)
-    if pid: 
+    except OSError, e:
+        raise Exception("%s" % (e.strerror))
+    if pid:
         os._exit(0)
- 
-    try: 
+
+    try:
         os.setsid()
     except OSError, e:
-        raise Exception, "%s" % (e.strerror)
- 
-    try: 
+        raise Exception("%s" % (e.strerror))
+
+    try:
         pid = os.fork()
-    except OSError, e: 
-        raise Exception, "%s" % (e.strerror)
-    if pid: 
-        os._exit(0) # Parent exits immediately
- 
+    except OSError, e:
+        raise Exception("%s" % (e.strerror))
+    if pid:
+        os._exit(0)  # Parent exits immediately
+
     open('/dev/null', 'rwb')
     os.dup2(0, 1)
     os.dup2(0, 2)
- 
+
     # Write pid file
     open(CFG_PID_FILE, 'w').write(str(os.getpid()))
 
-    return 0 
+    return 0
+
 
 def sig_term(signum, frame):
     logging.warning('SIGTERM recieved, exiting.')
     os.remove(CFG_PID_FILE)
     sys.exit(0)
 
+
 def sig_hup(signum, frame):
     logging.warning('SIGHUP recieved.')
+
 
 def build_filter():
     ldap_filter = CFG.get("LDAP", "filter")
@@ -111,19 +127,24 @@ def build_filter():
         logging.info("Filter set from argument: %s", ldap_filter)
         return ldap_filter
     else:
-	if OPT.date:
-	    from_date = datetime.strptime(OPT.date, DATE_DATE_FMT).strftime(LDAP_DATE_FMT)
-	    logging.debug("Filter set from --date")
-	elif os.path.isfile(CFG.get("DAEMON", 'statefile')):
-	    from_date = open(CFG.get("DAEMON", 'statefile'), 'r').readline().strip()
-	    logging.debug("Filter set from statefile %s" % CFG.get("DAEMON", 'statefile'))
-	else:
-	    from_date = datetime.today().strftime(LDAP_DATE_FMT)
-	    logging.warning("WARNING: No state file found. Filter set to now")
-	f = "(!(modifyTimestamp=%s))(modifyTimestamp>=%s)" % (from_date, from_date)
-	ldap_filter = "(&(%s)%s)" % (ldap_filter, f)
-	logging.info("Filter set from date: %s" % ldap_filter)
-	return ldap_filter
+        if OPT.date:
+            from_date = datetime.strptime(OPT.date, DATE_DATE_FMT).\
+                    strftime(LDAP_DATE_FMT)
+            logging.debug("Filter set from --date")
+        elif os.path.isfile(CFG.get("DAEMON", 'statefile')):
+            from_date = open(CFG.get("DAEMON", 'statefile'), 'r').\
+                    readline().strip()
+            logging.debug("Filter set from statefile %s" %
+                          CFG.get("DAEMON", 'statefile'))
+        else:
+            from_date = datetime.today().strftime(LDAP_DATE_FMT)
+            logging.warning("WARNING: No state file found. Filter set to now")
+        f = "(!(modifyTimestamp=%s))(modifyTimestamp>=%s)" %\
+            (from_date, from_date)
+        ldap_filter = "(&(%s)%s)" % (ldap_filter, f)
+        logging.info("Filter set from date: %s" % ldap_filter)
+        return ldap_filter
+
 
 def poll_ldap():
     logging.info('Connect to ldap server : %s' % CFG.get("LDAP", "uri"))
@@ -132,12 +153,14 @@ def poll_ldap():
     try:
         f = build_filter()
         ldapserver = ldap.initialize(CFG.get("LDAP", "uri"))
-        ldapserver.bind(CFG.get("LDAP", "binddn"), CFG.get("LDAP", "credentials"))
-        result = ldapserver.search_s(CFG.get("LDAP", "subtree"), ldap.SCOPE_SUBTREE,
+        ldapserver.bind(CFG.get("LDAP", "binddn"),
+                        CFG.get("LDAP", "credentials"))
+        result = ldapserver.search_s(CFG.get("LDAP", "subtree"),
+                                     ldap.SCOPE_SUBTREE,
                                      f, ["*", "+"])
         logging.info('Number of entries found: %d.' % len(result))
     except ldap.FILTER_ERROR:
-        logging.critical('FATAL: Connect failed: Filter or DateFormat incorrect')
+        logging.critical('FATAL: Connect failed: Filter incorrect')
         raise
     except ldap.NO_SUCH_OBJECT:
         logging.critical('FATAL: Connect failed: Subtree not correct')
@@ -150,53 +173,63 @@ def poll_ldap():
         raise
     return result, len(result)
 
+
 def clean_playbook_retry_files(playbook_dir):
     for file in glob.glob(playbook_dir + "/*.retry"):
         os.remove(file)
+
 
 def build_playbook_list(playbook_dir):
     playbook_paths = []
     for playbook_path in glob.glob(playbook_dir + "/*.yml"):
         playbook = yaml.load(open(playbook_path).read())
-        order = 0
+        rank = 0
         desc = playbook_path
         for var in playbook[0]["vars"]:
             k, v = next(var.iteritems())
-            if k == "order":
-                order = v
+            if k == "rank":
+                rank = v
             if k == "desc":
                 desc = v
             if k == "enable":
                 if v:
-                    playbook_paths.append((order, playbook_path, desc))
+                    playbook_paths.append((rank, playbook_path, desc))
     return sorted(playbook_paths)
 
+
 def build_playbook_options():
-    variable_manager = VariableManager()
     loader = DataLoader()
     if C.DEFAULT_VAULT_PASSWORD_FILE:
-        vault_password = CLI.read_vault_password_file(
-                C.DEFAULT_VAULT_PASSWORD_FILE, loader=loader)
-        loader.set_vault_password(vault_password)
-    inventory = Inventory(loader=loader, variable_manager=variable_manager,
-        host_list=CFG.get("ANSIBLE", "inventory"))
+        vault_secrets = CLI.setup_vault_secrets(
+                loader,
+                vault_ids=C.DEFAULT_VAULT_IDENTITY_LIST,
+                vault_password_files=[C.DEFAULT_VAULT_PASSWORD_FILE],
+                auto_prompt=False)
+        loader.set_vault_secrets(vault_secrets)
+    inventory = Inventory(loader=loader,
+                          sources=[CFG.get("ANSIBLE", "inventory")])
     passwords = {}
-    options = AnsibleOptions(listtags=False, listtasks=False, listhosts=False,
+    options = AnsibleOptions(
+        listtags=False, listtasks=False, listhosts=False,
         syntax=False, connection='ssh', module_path=None, forks=10,
         remote_user='root', private_key_file=None, ssh_common_args=None,
-        ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True,
-        become_method=None, become_user='root', verbosity=3, check=OPT.DRYRUN)
+        ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None,
+        become=True, become_method=None, become_user='root', verbosity=3,
+        check=OPT.DRYRUN, diff=True)
+    variable_manager = VariableManager(loader=loader, inventory=inventory)
     return {"variable_manager": variable_manager, "loader": loader,
             "inventory": inventory, "passwords": passwords, "options": options}
+
 
 def run_playbook(playbook_path, playbook_options):
     pbex = PlaybookExecutor(playbooks=[playbook_path], **playbook_options)
     sys_stdout = sys.stdout
     sys.stdout = StringIO()
-    rc = pbex.run() 
+    rc = pbex.run()
     stdout = sys.stdout.getvalue()
     sys.stdout = sys_stdout
     return rc, stdout
+
 
 if __name__ == "__main__":
 
@@ -222,10 +255,10 @@ if __name__ == "__main__":
 
     CFG_FILE = os.environ.get("SLUFL_CFG_FILE") or '/etc/slufld.conf'
     if not os.path.isfile(CFG_FILE):
-	logging.critical("FATAL: Configuration file %s not found." % CFG_FILE)
+        logging.critical("FATAL: Configuration file %s not found." % CFG_FILE)
         sys.exit(-1)
     if os.stat(CFG_FILE).st_mode & 1:
-	logging.critical("FATAL: Configuration file %s must not be world readable." % CFG_FILE)
+        logging.critical("FATAL: Wrong permissions on %s." % CFG_FILE)
         sys.exit(-1)
 
     CFG = parse_config(CFG_FILE)
@@ -237,13 +270,13 @@ if __name__ == "__main__":
         os.environ["ANSIBLE_CONFIG"] = CFG.get("ANSIBLE", "configfile")
 
     # The following imports requirement the env to be set
-    from ansible.inventory import Inventory
-    from ansible.vars import VariableManager
+    from ansible.inventory.manager import InventoryManager as Inventory
+    from ansible.vars.manager import VariableManager
     from ansible.parsing.dataloader import DataLoader
     from ansible.executor.playbook_executor import PlaybookExecutor
     from ansible import constants as C
     from ansible.cli import CLI
-    
+
     sleeptime = CFG.getint("DAEMON", "initsleeptime")
 
     PLAYBOOK_DIR = os.environ.get("SLUFL_CONF_DIR") or '/etc/slufld.conf.d'
@@ -262,22 +295,25 @@ if __name__ == "__main__":
         try:
             entries, nbentries = poll_ldap()
             for number, (dn, entry) in enumerate(entries):
-                logging.warning("Processing item '%s' (%d/%d)" % 
-                        (entry[CFG.get("LDAP", "logfield")][0], number + 1, nbentries))
+                logging.warning("Processing item '%s' (%d/%d)" %
+                                (entry[CFG.get("LDAP", "logfield")][0],
+                                    number + 1, nbentries))
                 for k, v in entry.iteritems():
                     for i, _ in enumerate(v):
                         entry[k][i] = entry[k][i].decode('utf-8')
                 logging.debug(pprint.pformat(entry))
                 for _, playbook_path, desc in playbook_paths:
                     logging.info("  " + desc)
-                    
-                    playbook_options["variable_manager"].extra_vars = entry;
+
+                    playbook_options["variable_manager"].extra_vars = entry
                     rc, stdout = run_playbook(playbook_path, playbook_options)
                     logging.debug(stdout)
 
                 if not OPT.RUNONCE:
-                    logging.debug("Updating state file (%s)" % entry.modtime)
-                    open(CFG.get("DAEMON", "statefile"), 'w').write(entry.modtime)
+                    logging.debug("Updating state file (%s)" % 
+                                  entry["modifyTimestamp"][0])
+                    open(CFG.get("DAEMON", "statefile"), 'w').write(
+                            entry["modifyTimestamp"][0])
 
             sleeptime = CFG.getint("DAEMON", "initsleeptime")
 
@@ -286,14 +322,16 @@ if __name__ == "__main__":
                 logging.critical("ERROR: Problem encountered... Bailing out.")
                 raise
             else:
-                sleeptime = min(CFG.getint("DAEMON", "maxsleeptime"), sleeptime * 2)
-                logging.error('ERROR: Problem encoutered. Will try again in %d seconds...' % sleeptime)
+                sleeptime = min(CFG.getint("DAEMON", "maxsleeptime"),
+                                sleeptime * 2)
+                logging.error('ERROR: Problem encoutered. Will try again "\
+                        "in %d seconds...' % sleeptime)
                 logging.error('ERROR: Run slufld in debug mode for details.')
                 logging.debug(err)
-    
+
         if OPT.RUNONCE:
-	    logging.info("All done.")
-	    logging.warning("Bailing out.")
+            logging.info("All done.")
+            logging.warning("Bailing out.")
             break
         else:
             logging.info("Sleeping %d second" % sleeptime)
