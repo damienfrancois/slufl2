@@ -274,6 +274,10 @@ if __name__ == "__main__":
                     playbook_options["variable_manager"].extra_vars = entry;
                     rc, stdout = run_playbook(playbook_path, playbook_options)
                     logging.debug(stdout)
+                    if rc > 0:
+                        logging.error(stdout)
+                        raise Exception()
+
 
                 if not OPT.RUNONCE:
                     logging.debug("Updating state file (%s)" % entry.modtime)
