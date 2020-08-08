@@ -12,7 +12,7 @@ Prerequisites:
 
   - Python 2.7
   - LDAP Python binding (python-ldap) with your operating system's package manager or Pip
-  - Ansible (version 2 or above; for the 2.4 version, see the dedicated branch)
+  - Ansible (version 2 or above; for the 2.4 and 2.9 versions, see the dedicated branches)
 
 Copy the `slufld.conf.template` file to `/etc/slufld.conf` and update its contents, especially the part that refers to the LDAP server configuration. Copy the `etc/slufld.conf.d` directory to `/etc`.
 
