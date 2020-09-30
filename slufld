@@ -4,6 +4,7 @@
 import os
 import sys
 import glob
+import json
 import time
 import yaml
 import signal
@@ -14,20 +15,11 @@ import ConfigParser
 
 from datetime import datetime
 from cStringIO import StringIO
-from collections import namedtuple
 
 import ldap
 
 
 __version__ = "2.0.0-beta"
-
-AnsibleOptions = namedtuple(
-        'Options', ['listtags', 'listtasks', 'listhosts',
-                    'syntax', 'connection', 'module_path', 'forks',
-                    'remote_user', 'private_key_file', 'ssh_common_args',
-                    'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args',
-                    'become', 'become_method', 'become_user', 'verbosity',
-                    'check', 'diff'])
 
 DATE_DATE_FMT = "%Y-%m-%d"
 LDAP_DATE_FMT = "%Y%m%d%H%M%S+0100"
@@ -209,16 +201,21 @@ def build_playbook_options():
     inventory = Inventory(loader=loader,
                           sources=[CFG.get("ANSIBLE", "inventory")])
     passwords = {}
-    options = AnsibleOptions(
+    return {"variable_manager": None, "loader": loader,
+            "inventory": inventory, "passwords": passwords}
+
+
+def set_cliargs(extra_vars, playbook_options):
+    context.CLIARGS = ImmutableDict(
         listtags=False, listtasks=False, listhosts=False,
         syntax=False, connection='ssh', module_path=None, forks=10,
         remote_user='root', private_key_file=None, ssh_common_args=None,
         ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None,
-        become=True, become_method=None, become_user='root', verbosity=3,
-        check=OPT.DRYRUN, diff=True)
-    variable_manager = VariableManager(loader=loader, inventory=inventory)
-    return {"variable_manager": variable_manager, "loader": loader,
-            "inventory": inventory, "passwords": passwords, "options": options}
+        become=True, become_method='sudo', become_user='root', verbosity=3,
+        check=OPT.DRYRUN, diff=True,
+        extra_vars=[json.dumps(extra_vars)], start_at_task=None)
+    playbook_options['variable_manager'] = VariableManager(loader=playbook_options['loader'], inventory=playbook_options['inventory'])
+    return playbook_options
 
 
 def run_playbook(playbook_path, playbook_options):
@@ -270,10 +267,12 @@ if __name__ == "__main__":
         os.environ["ANSIBLE_CONFIG"] = CFG.get("ANSIBLE", "configfile")
 
     # The following imports requirement the env to be set
+    from ansible.module_utils.common.collections import ImmutableDict
     from ansible.inventory.manager import InventoryManager as Inventory
     from ansible.vars.manager import VariableManager
     from ansible.parsing.dataloader import DataLoader
     from ansible.executor.playbook_executor import PlaybookExecutor
+    from ansible import context
     from ansible import constants as C
     from ansible.cli import CLI
 
@@ -302,10 +301,9 @@ if __name__ == "__main__":
                     for i, _ in enumerate(v):
                         entry[k][i] = entry[k][i].decode('utf-8')
                 logging.debug(pprint.pformat(entry))
+                playbook_options = set_cliargs(entry, playbook_options)
                 for _, playbook_path, desc in playbook_paths:
                     logging.info("  " + desc)
-
-                    playbook_options["variable_manager"].extra_vars = entry
                     rc, stdout = run_playbook(playbook_path, playbook_options)
                     logging.debug(stdout)
                     if rc > 0:
