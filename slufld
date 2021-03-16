@@ -119,6 +119,7 @@ def build_filter():
         logging.info("Filter set from argument: %s", ldap_filter)
         return ldap_filter
     else:
+        today = datetime.today().strftime(LDAP_DATE_FMT)
         if OPT.date:
             from_date = datetime.strptime(OPT.date, DATE_DATE_FMT).\
                     strftime(LDAP_DATE_FMT)
@@ -129,10 +130,10 @@ def build_filter():
             logging.debug("Filter set from statefile %s" %
                           CFG.get("DAEMON", 'statefile'))
         else:
-            from_date = datetime.today().strftime(LDAP_DATE_FMT)
+            from_date = today
             logging.warning("WARNING: No state file found. Filter set to now")
-        f = "(!(modifyTimestamp=%s))(modifyTimestamp>=%s)" %\
-            (from_date, from_date)
+        f = "(!(modifyTimestamp=%s))(modifyTimestamp>=%s)(!(expirationDate=%s))(expirationDate>=%s)" %\
+            (from_date, from_date, today, today)
         ldap_filter = "(&(%s)%s)" % (ldap_filter, f)
         logging.info("Filter set from date: %s" % ldap_filter)
         return ldap_filter
