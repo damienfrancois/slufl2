@@ -18,7 +18,11 @@ setup(name='slufl2',
                   ('/etc/slufld.conf.d/vault', ['etc/slufld.conf.d/vault/secret.yml'])
                  ],
       long_description="""slufl is a damon that monitors an LDAP server and
-                  triggers Ansible playbook upon changes."""
+                  triggers Ansible playbook upon changes.""",
+       install_requires=[
+          'ansible==2.9',
+      ],
+      #options = {'bdist_rpm':{'post_install' : 'etc/rpm_postinstall.sh'}},
 )
 
 # create tar.gz
