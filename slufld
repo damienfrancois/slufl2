@@ -115,7 +115,7 @@ def build_filter():
     logging.debug("Base filter: %s" % ldap_filter)
 
     if OPT.filter:
-        ldap_filter = "(&(%s)(%s))" % (ldap_filter, OPT.filter)
+        ldap_filter = "(%s)" % (OPT.filter)
         logging.info("Filter set from argument: %s", ldap_filter)
         return ldap_filter
     else:
