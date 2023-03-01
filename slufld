@@ -3,6 +3,7 @@
 
 import os
 import sys
+import six
 import glob
 import json
 import time
@@ -11,10 +12,16 @@ import signal
 import pprint
 import logging
 import argparse
-import ConfigParser
+try:
+    import ConfigParser ## for Python 2
+except ImportError:
+    import configparser as ConfigParser ## for Python 3
 
 from datetime import datetime
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 
 import ldap
 
@@ -73,19 +80,19 @@ def parse_config(CFG_FILE):
 def daemonize():
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise Exception("%s" % (e.strerror))
     if pid:
         os._exit(0)
 
     try:
         os.setsid()
-    except OSError, e:
+    except OSError as e:
         raise Exception("%s" % (e.strerror))
 
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise Exception("%s" % (e.strerror))
     if pid:
         os._exit(0)  # Parent exits immediately
@@ -115,7 +122,7 @@ def build_filter():
     logging.debug("Base filter: %s" % ldap_filter)
 
     if OPT.filter:
-        ldap_filter = "(%s)" % (OPT.filter)
+        ldap_filter = "(&(%s)(%s))" % (ldap_filter, OPT.filter)
         logging.info("Filter set from argument: %s", ldap_filter)
         return ldap_filter
     else:
@@ -179,7 +186,7 @@ def build_playbook_list(playbook_dir):
         rank = 0
         desc = playbook_path
         for var in playbook[0]["vars"]:
-            k, v = next(var.iteritems())
+            k, v = next(six.iteritems(var))
             if k == "rank":
                 rank = v
             if k == "desc":
@@ -233,7 +240,7 @@ if __name__ == "__main__":
 
     OPT = parse_options()
     if OPT.VERSION:
-        print "Slufl version %s" % __version__
+        print("Slufl version %s" % __version___)
         sys.exit(-1)
 
     logging_options = {}
@@ -298,7 +305,7 @@ if __name__ == "__main__":
                 logging.warning("Processing item '%s' (%d/%d)" %
                                 (entry[CFG.get("LDAP", "logfield")][0],
                                     number + 1, nbentries))
-                for k, v in entry.iteritems():
+                for k, v in six.iteritems(entry):
                     for i, _ in enumerate(v):
                         entry[k][i] = entry[k][i].decode('utf-8')
                 logging.debug(pprint.pformat(entry))
@@ -312,7 +319,7 @@ if __name__ == "__main__":
                         raise Exception()
 
                 if not OPT.RUNONCE:
-                    logging.debug("Updating state file (%s)" % 
+                    logging.debug("Updating state file (%s)" %
                                   entry["modifyTimestamp"][0])
                     open(CFG.get("DAEMON", "statefile"), 'w').write(
                             entry["modifyTimestamp"][0])
