@@ -20,7 +20,7 @@ setup(name='slufl2',
       long_description="""slufl is a damon that monitors an LDAP server and
                   triggers Ansible playbook upon changes.""",
        install_requires=[
-          'ansible==2.9',
+          'ansible==7.0.0',
       ],
       #options = {'bdist_rpm':{'post_install' : 'etc/rpm_postinstall.sh'}},
 )
