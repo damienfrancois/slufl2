@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3.9
 # -*- coding: utf-8 -*-
 
 import os
@@ -8,25 +8,17 @@ import glob
 import json
 import time
 import yaml
+import ldap
 import signal
 import pprint
 import logging
 import argparse
-try:
-    import ConfigParser ## for Python 2
-except ImportError:
-    import configparser as ConfigParser ## for Python 3
-
+import configparser as ConfigParser
+from io import StringIO ## for Python 3
 from datetime import datetime
-try:
-    from cStringIO import StringIO ## for Python 2
-except ImportError:
-    from io import StringIO ## for Python 3
-
-import ldap
 
 
-__version__ = "2.0.0-beta"
+__version__ = "3.0.0"
 
 DATE_DATE_FMT = "%Y-%m-%d"
 LDAP_DATE_FMT = "%Y%m%d%H%M%S+0100"
@@ -37,9 +29,6 @@ CFG_LOG_FILE = '/var/log/slufld.log'
 
 def parse_options():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-f", "--foreground", action="store_true", dest="FORGROUND",
-        help="Stay in the foreground, i.e. do not daemonize.")
     parser.add_argument(
         "-1", "--run-once", action="store_true", dest="RUNONCE",
         help="Stop after first iteration")
@@ -77,35 +66,6 @@ def parse_config(CFG_FILE):
     return CFG
 
 
-def daemonize():
-    try:
-        pid = os.fork()
-    except OSError as e:
-        raise Exception("%s" % (e.strerror))
-    if pid:
-        os._exit(0)
-
-    try:
-        os.setsid()
-    except OSError as e:
-        raise Exception("%s" % (e.strerror))
-
-    try:
-        pid = os.fork()
-    except OSError as e:
-        raise Exception("%s" % (e.strerror))
-    if pid:
-        os._exit(0)  # Parent exits immediately
-
-    open('/dev/null', 'rwb')
-    os.dup2(0, 1)
-    os.dup2(0, 2)
-
-    # Write pid file
-    open(CFG_PID_FILE, 'w').write(str(os.getpid()))
-
-    return 0
-
 
 def sig_term(signum, frame):
     logging.warning('SIGTERM recieved, exiting.')
@@ -122,7 +82,7 @@ def build_filter():
     logging.debug("Base filter: %s" % ldap_filter)
 
     if OPT.filter:
-        ldap_filter = "(&(%s)(%s))" % (ldap_filter, OPT.filter)
+        ldap_filter = "(%s)" % (OPT.filter)
         logging.info("Filter set from argument: %s", ldap_filter)
         return ldap_filter
     else:
@@ -182,11 +142,12 @@ def clean_playbook_retry_files(playbook_dir):
 def build_playbook_list(playbook_dir):
     playbook_paths = []
     for playbook_path in glob.glob(playbook_dir + "/*.yml"):
-        playbook = yaml.load(open(playbook_path).read())
+        playbook = yaml.load(open(playbook_path).read(), Loader=yaml.FullLoader)
         rank = 0
         desc = playbook_path
         for var in playbook[0]["vars"]:
-            k, v = next(six.iteritems(var))
+            print(list(var.items())[0])
+            k, v = list(var.items())[0]
             if k == "rank":
                 rank = v
             if k == "desc":
@@ -251,8 +212,6 @@ if __name__ == "__main__":
     if OPT.DEBUG:
         logging_options["level"] = logging.DEBUG
         logging_options["format"] = ""
-    if not OPT.FORGROUND:
-        logging_options["filename"] = CFG_LOG_FILE
     logging.basicConfig(**logging_options)
 
     if OPT.DRYRUN:
@@ -291,21 +250,14 @@ if __name__ == "__main__":
     playbook_options = build_playbook_options()
     clean_playbook_retry_files(PLAYBOOK_DIR)
 
-    if not OPT.FORGROUND:
-        logging.debug("Entering daemon mode...")
-        logging.basicConfig(filename=CFG_LOG_FILE)
-        signal.signal(signal.SIGTERM, sig_term)
-        signal.signal(signal.SIGHUP, sig_hup)
-        daemonize()
-
     while True:
         try:
             entries, nbentries = poll_ldap()
             for number, (dn, entry) in enumerate(entries):
                 logging.warning("Processing item '%s' (%d/%d)" %
-                                (entry[CFG.get("LDAP", "logfield")][0],
+                                (entry[CFG.get("LDAP", "logfield")][0].decode(),
                                     number + 1, nbentries))
-                for k, v in six.iteritems(entry):
+                for k, v in entry.items():
                     for i, _ in enumerate(v):
                         entry[k][i] = entry[k][i].decode('utf-8')
                 logging.debug(pprint.pformat(entry))
