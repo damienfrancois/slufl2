@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+# Rocky8
 from distutils.core import setup
 
-setup(name='slufl2',
-      version='2.3.0-beta',
+setup(name='slufl3',
+      version='3.0.0',
       description='Run Ansible playbooks when LDAP entries change.',
       license='BSD',
       author='Damien François',
       author_email='damien.francois@uclouvain.be',
-      url='https://github.com/damienfrancois/slufl2',
+      url='https://github.com/damienfrancois/slufl3',
       scripts=['slufld'],
       data_files=[
                   ('/etc', ['etc/slufld.conf.template']),
@@ -20,12 +21,13 @@ setup(name='slufl2',
       long_description="""slufl is a damon that monitors an LDAP server and
                   triggers Ansible playbook upon changes.""",
        install_requires=[
-          'ansible==2.9',
+          'python-ldap',
+          'pyyaml',
       ],
-      #options = {'bdist_rpm':{'post_install' : 'etc/rpm_postinstall.sh'}},
+      options = {'bdist_rpm':{'post_install' : 'etc/rpm_postinstall.sh'}},
 )
 
 # create tar.gz
 # python setup.py sdist
 # create rpm
-# python setup.py bdist_rpm
+# python3.9 setup.py bdist_rpm

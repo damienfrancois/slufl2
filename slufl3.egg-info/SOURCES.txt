@@ -1,0 +1,16 @@
+LICENSE
+README.md
+setup.cfg
+setup.py
+slufld
+etc/slufld.conf.template
+etc/slufld.service
+etc/slufld.conf.d/TestCustom.yml
+etc/slufld.conf.d/ansible.cfg
+etc/slufld.conf.d/inventory
+etc/slufld.conf.d/vault/secret.yml
+slufl3.egg-info/PKG-INFO
+slufl3.egg-info/SOURCES.txt
+slufl3.egg-info/dependency_links.txt
+slufl3.egg-info/requires.txt
+slufl3.egg-info/top_level.txt

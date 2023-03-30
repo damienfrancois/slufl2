@@ -1,5 +1,7 @@
-#! /usr/bin/env python3.9
+#! /usr/bin/python3.9
 # -*- coding: utf-8 -*-
+# The sheband is re-hardcoded by rpmbuild so better 
+# to hardcode it here also
 
 import os
 import sys

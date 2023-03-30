@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: slufl3
+Version: 3.0.0
+Summary: Run Ansible playbooks when LDAP entries change.
+Home-page: https://github.com/damienfrancois/slufl3
+Author: Damien François
+Author-email: damien.francois@uclouvain.be
+License: BSD
+License-File: LICENSE
+
+slufl is a damon that monitors an LDAP server and
+                  triggers Ansible playbook upon changes.
