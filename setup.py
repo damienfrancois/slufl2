@@ -5,7 +5,7 @@
 from distutils.core import setup
 
 setup(name='slufl3',
-      version='3.0.0',
+      version='3.0.1',
       description='Run Ansible playbooks when LDAP entries change.',
       license='BSD',
       author='Damien François',
@@ -29,5 +29,5 @@ setup(name='slufl3',
 
 # create tar.gz
 # python setup.py sdist
-# create rpm
-# python3.9 setup.py bdist_rpm
+# create rpm, can be done in /vagrant directly
+# python3 setup.py bdist_rpm # the script will use python3.6 for intermediate tasks anyways...

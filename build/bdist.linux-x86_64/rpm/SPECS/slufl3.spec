@@ -1,6 +1,6 @@
 %define name slufl3
-%define version 3.0.0
-%define unmangled_version 3.0.0
+%define version 3.0.1
+%define unmangled_version 3.0.1
 %define release 1
 
 Summary: Run Ansible playbooks when LDAP entries change.
@@ -15,7 +15,7 @@ Prefix: %{_prefix}
 BuildArch: noarch
 Vendor: Damien François <damien.francois@uclouvain.be>
 Provides: slufl3
-Requires: ansible python39-devel openldap-devel
+Requires: ansible python3.11-pip python3.11-devel openldap-devel gcc
 Url: https://github.com/damienfrancois/slufl3
 
 %description
@@ -35,10 +35,11 @@ python3 setup.py install -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 rm -rf $RPM_BUILD_ROOT
 
 %post
-echo Installing 
-pip3.9 install python-ldap
+echo "Installing python-ldap (pip)"
+pip3.11 install python-ldap
+
 echo Fixing shebang
-sed -i.bak 's|#!/usr/bin/python3|#!/usr/bin/python3.9|'  /usr/bin/slufld
+sed -i.bak 's|#!/usr/libexec/platform-python|#!/usr/bin/python3.11|'  /usr/bin/slufld
 
 
 %files -f INSTALLED_FILES

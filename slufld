@@ -1,4 +1,4 @@
-#! /usr/bin/python3.9
+#! /usr/bin/python3.11
 # -*- coding: utf-8 -*-
 # The sheband is re-hardcoded by rpmbuild so better 
 # to hardcode it here also
@@ -20,7 +20,7 @@ from io import StringIO ## for Python 3
 from datetime import datetime
 
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 DATE_DATE_FMT = "%Y-%m-%d"
 LDAP_DATE_FMT = "%Y%m%d%H%M%S+0100"
@@ -148,7 +148,6 @@ def build_playbook_list(playbook_dir):
         rank = 0
         desc = playbook_path
         for var in playbook[0]["vars"]:
-            print(list(var.items())[0])
             k, v = list(var.items())[0]
             if k == "rank":
                 rank = v
