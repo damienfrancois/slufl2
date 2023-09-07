@@ -1,1 +1,3 @@
 etc/slufld.conf.d/vault_password_file.txt
+build
+dist
