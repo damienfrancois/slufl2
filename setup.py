@@ -31,3 +31,5 @@ setup(name='slufl3',
 # python setup.py sdist
 # create rpm, can be done in /vagrant directly
 # python3 setup.py bdist_rpm # the script will use python3.6 for intermediate tasks anyways...
+# not python3.11 setup.py
+# --release 2
