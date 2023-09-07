@@ -2,7 +2,7 @@
 Description=Daemon to detect changes in LDAP
 After=syslog.target
 [Service]
-ExecStart=/bin/slufld -f -v
+ExecStart=/bin/slufld -v
 Type=simple
 [Install]
 WantedBy=multi-user.target
